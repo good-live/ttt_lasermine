@@ -70,10 +70,10 @@
 #define ALTCOMMAND		"buyammo2"
 
 //----------------------------------------------------------------------------------------------------------------------
-public Plugin:myinfo = {
+public Plugin myinfo = {
 	name = "TTT - Tripmines",
 	author = "good_live (reflex-gaming)",
-	description = "Tipmines for the TTT mod from Bara",
+	description = "Tripmines for the TTT mod from Bara",
 	version = "1.0.5",
 	url = "painlessgaming.eu"
 };
@@ -235,7 +235,7 @@ public bool IsValidClient( client ) {
 }
 
 
-public CVarChanged_minefilter( Handle:cvar, const String:oldval[], const String:newval[] ) {
+public void CVarChanged_minefilter( Handle cvar, const char[] oldval, const char[] newval ) {
 	if( strcmp( oldval, newval ) == 0 ) return;
 
 	minefilter = sm_pp_minefilter.IntValue;
@@ -246,18 +246,18 @@ public CVarChanged_minefilter( Handle:cvar, const String:oldval[], const String:
 //
 // restore mines on round start
 //
-public Event_RoundStart( Handle:event, const String:name[], bool:dontBroadcast ) {
+public void Event_RoundStart( Handle event, const char[] name, bool dontBroadcast ) {
 	g_iMine_counter = 0;
 	explosion_sound_enable=true;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-public OnClientDisconnect( client ) {
-	DeletePlacedMines( client );
+public void OnClientDisconnect(int client) {
+	DeletePlacedMines(client);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-public DeletePlacedMines(client) {
+public void DeletePlacedMines(int client) {
 	int ent = -1;
 	char name[32];
 	while( (ent = FindEntityByClassname( ent, "prop_physics_override" )) != -1 ) {
