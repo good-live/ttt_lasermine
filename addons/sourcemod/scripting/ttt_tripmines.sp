@@ -349,6 +349,9 @@ public void MineLaser_OnTouch( const char[] output, caller, activator, float del
 	if(!IsPlayerAlive(activator)) 
 		return;
 
+	if(TTT_GetClientRole(activator) == TTT_TEAM_TRAITOR)
+		return;
+
 	bool detonate = false;
 
 	
@@ -574,28 +577,20 @@ public Action DefuseTimer(Handle timer, any client) {
 
 
 	g_iDefuse_Time[client]++;
-	if( g_iDefuse_Time[client] < 2 ) {
+	if( g_iDefuse_Time[client] < 5 ) {
 		char message[16] = "Defusing.";
 		
 		for( new i = 0; i < g_iDefuse_Time[client]; i++ )
 			StrCat( message, 16, "." );
 
 		PrintHintText( client, message );
-	} else {
+	}else{
 
 		EmitSoundToClient( client, SOUND_PLACE );//
-//		PlayMineSound( defuse_target[client], SOUND_PLACE );
-
-		g_iMines[client]++;
-
-		// defuse mine and give to player
+		
 		UnhookSingleEntityOutput( g_iDefuse_Target[client], "OnBreak", MineBreak );
 		AcceptEntityInput( g_iDefuse_Target[client], "Break" );
-
 		
-		
-		PrintHintText( client, "Mine Defused. You have %d mine%s now", g_iMines[client], g_iMines[client] != 1 ? "s" : "" );
-
 		g_iDefuse_Userid[client] = 0;
 		return Plugin_Stop;
 	}
