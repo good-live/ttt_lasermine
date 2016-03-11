@@ -349,9 +349,6 @@ public void MineLaser_OnTouch( const char[] output, caller, activator, float del
 	if(!IsPlayerAlive(activator)) 
 		return;
 
-	if(TTT_GetClientRole(activator) == TTT_TEAM_TRAITOR)
-		return;
-
 	bool detonate = false;
 
 	
@@ -372,8 +369,11 @@ public void MineLaser_OnTouch( const char[] output, caller, activator, float del
 		// detonate always
 		detonate = true;
 	}
-	 
+	
 
+	if(TTT_GetClientRole(activator) == TTT_TEAM_TRAITOR)
+		detonate = false;
+	
 	if(detonate) {
 		char targetname[64];
 		GetEntPropString( caller, Prop_Data, "m_iName", targetname, sizeof(targetname) );
@@ -451,13 +451,9 @@ public void SetupMine(int client, float position[3], float normal[3]) {
 	
 	// when touched, activate/break the mine
 
-	if( minefilter == 1 || minefilter == 2 ) {
-		HookSingleEntityOutput( ent_laser, "OnTouchedByEntity", MineLaser_OnTouch );
-	} else {
-		// detonate against anything
-		Format( str, sizeof(str), "%s,Break,,0,-1", mine_name );
-		DispatchKeyValue( ent_laser, "OnTouchedByEntity", str );
-	}
+	HookSingleEntityOutput( ent_laser, "OnTouchedByEntity", MineLaser_OnTouch );
+
+
 
 	SetEntPropEnt(ent_laser, Prop_Data, "m_hOwnerEntity",client); //Set the owner of the mine's beam
 	
