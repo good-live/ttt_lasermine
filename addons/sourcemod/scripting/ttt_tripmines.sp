@@ -120,6 +120,7 @@ public OnPluginStart() {
 	sm_pp_mode = CreateConVar("tp_mode", "1", "Mode of the Tripmines 0 = Everybody, 1 = T Only, 2 = D Only, 3 = T and D");
 
 	HookEvent( "round_start", Event_RoundStart );
+	HookEvent( "round_end", Event_RoundEnd );
 	HookEvent( "player_use", Event_PlayerUse );
 
 	HookConVarChange( sm_pp_minefilter, CVarChanged_minefilter );
@@ -191,6 +192,10 @@ public void TTT_OnRoundStart(int i, int t, int d)
 public void TTT_OnClientDeath(int v, int a)
 {
 	g_iMines[v] = 0;
+}
+
+public void Event_RoundEnd( Handle event, const char[] name, bool dontBroadcast ) {
+	ResetMines();
 }
 
 public void ResetMines()
