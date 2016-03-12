@@ -12,6 +12,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <ttt>
+#include <multicolors>
 
 #pragma semicolon 1
 
@@ -131,6 +132,10 @@ public OnPluginStart() {
 		RegConsoleCmd(ALTCOMMAND, Command_Mine);
 	}
 	
+	AutoExecConfig();
+	
+	LoadTranslations("ttt.mines.phrases");
+	
 	minefilter = sm_pp_minefilter.IntValue;
 	
 	
@@ -167,8 +172,11 @@ public Action TTT_OnItemPurchased(int client, const char[] itemshort)
 {
 	if (TTT_IsClientValid(client) && IsPlayerAlive(client))
 	{
-		if ((strcmp(itemshort, "tripmine_d", false) == 0) || (strcmp(itemshort, "tripmine_t", false) == 0) || (strcmp(itemshort, "tripmine_i", false) == 0))
+		if ((strcmp(itemshort, "tripmine_d", false) == 0) || (strcmp(itemshort, "tripmine_t", false) == 0) || (strcmp(itemshort, "tripmine_i", false) == 0)){
 			g_iMines[client]++;
+			CPrintToChat(client, "%t","Your trip mines have changed");
+		}
+		
 	}
 	return Plugin_Continue;
 }
