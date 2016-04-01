@@ -18,6 +18,8 @@
 
 //
 // Changelog:
+// 22:23 PM 04/01/2016 - 1.0.6
+// 	 Removed defuse - good_live
 // 15:27 PM 03/10/2016 - 1.0.5
 //	 Converting to 1.7 Syntax and adding it to TTT - good_live
 // 11:48 PM 11/30/2012 - 1.0.4
@@ -42,7 +44,6 @@
 #define SOUND_PLACE		"weapons/g3sg1/g3sg1_slideback.wav"
 #define SOUND_ARMING	"weapons/c4/c4_beep1.wav"     // UI/beep07.wav
 #define SOUND_ARMED		"items/nvg_on.wav"
-#define SOUND_DEFUSE	"weapons/c4/c4_disarm.wav"
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -75,7 +76,7 @@ public Plugin myinfo =  {
 	name = "TTT - Tripmines", 
 	author = "good_live (reflex-gaming)", 
 	description = "Tripmines for the TTT mod from Bara", 
-	version = "1.0.5", 
+	version = "1.0.6", 
 	url = "painlessgaming.eu"
 };
 
@@ -93,14 +94,6 @@ int g_iMine_counter = 0;
 
 bool explosion_sound_enable = true;
 
-int g_iLast_Mine;
-
-int g_iDefuse_Time[MAXPLAYERS + 1];
-int g_iDefuse_Target[MAXPLAYERS + 1];
-float g_fDefuse_Position[MAXPLAYERS + 1][3];
-float g_fDefuse_Angles[MAXPLAYERS + 1][3];
-bool g_bDefuse_Cancelled[MAXPLAYERS + 1];
-int g_iDefuse_Userid[MAXPLAYERS + 1];
 
 #define DEFUSE_ANGLE_THRESHOLD 5.0  // 5 degrees
 #define DEFUSE_POSITION_THRESHOLD 1.0 // 1 unit
@@ -122,7 +115,6 @@ public OnPluginStart() {
 	
 	HookEvent("round_start", Event_RoundStart);
 	HookEvent("round_end", Event_RoundEnd);
-	HookEvent("player_use", Event_PlayerUse);
 	
 	HookConVarChange(sm_pp_minefilter, CVarChanged_minefilter);
 	
@@ -223,7 +215,6 @@ public OnMapStart() {
 	PrecacheSound(SOUND_PLACE, true);
 	PrecacheSound(SOUND_ARMING, true);
 	PrecacheSound(SOUND_ARMED, true);
-	PrecacheSound(SOUND_DEFUSE, true);
 	
 	// PRECACHE MODELS
 	PrecacheModel(MODEL_MINE);
@@ -445,8 +436,6 @@ public void SetupMine(int client, float position[3], float normal[3]) {
 	// hook to explosion function
 	HookSingleEntityOutput(ent, "OnBreak", MineBreak, true);
 	
-	HookSingleEntityOutput(ent, "OnPlayerUse", MineUsed, false);
-	
 	// offset placement slightly so it is on the wall's surface
 	for (new i = 0; i < 3; i++) {
 		position[i] += normal[i] * 0.5;
@@ -531,111 +520,9 @@ public void MineBreak(const char[] output, caller, activator, float delay)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-public Action DefuseTimer(Handle timer, any client) {
-	int userid = g_iDefuse_Userid[client];
-	int old_client = GetClientOfUserId(userid);
-	
-	if (!IsValidClient(old_client) || old_client != client)
-		return Plugin_Stop; //Somebody else is defusing???
-	
-	
-	if (g_bDefuse_Cancelled[client]) {
-		g_iDefuse_Userid[client] = 0;
-		return Plugin_Stop;
-	}
-	
-	if (!IsValidEntity(g_iDefuse_Target[client])) {
-		g_iDefuse_Userid[client] = 0;
-		return Plugin_Stop;
-	}
-	
-	bool player_moved = false;
-	// VERIFY ANGLES
-	float angles[3];
-	
-	
-	GetClientEyeAngles(client, angles);
-	for (new i = 0; i < 3; i++) {
-		if (FloatAbs(angles[i] - g_fDefuse_Angles[client][i]) > DEFUSE_ANGLE_THRESHOLD) {
-			player_moved = true;
-			break;
-		}
-	}
-	
-	if (!player_moved) {
-		float pos[3];
-		GetClientAbsOrigin(client, pos);
-		
-		for (new i = 0; i < 3; i++) {
-			pos[i] -= g_fDefuse_Position[client][i];
-			pos[i] *= pos[i];
-		}
-		
-		float dist = pos[0] + pos[1] + pos[2];
-		
-		if (dist >= (DEFUSE_POSITION_THRESHOLD * DEFUSE_POSITION_THRESHOLD)) {
-			player_moved = true;
-		}
-	}
-	
-	if (player_moved) {
-		PrintHintText(client, "Defusal Interrupted.");
-		g_iDefuse_Userid[client] = 0;
-		return Plugin_Stop;
-	}
-	
-	
-	g_iDefuse_Time[client]++;
-	if (g_iDefuse_Time[client] < 5) {
-		char message[16] = "Defusing.";
-		
-		for (new i = 0; i < g_iDefuse_Time[client]; i++)
-		StrCat(message, 16, ".");
-		
-		PrintHintText(client, message);
-	} else {
-		
-		EmitSoundToClient(client, SOUND_PLACE); //
-		
-		UnhookSingleEntityOutput(g_iDefuse_Target[client], "OnBreak", MineBreak);
-		AcceptEntityInput(g_iDefuse_Target[client], "Break");
-		
-		g_iDefuse_Userid[client] = 0;
-		return Plugin_Stop;
-	}
-	
-	return Plugin_Handled;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-public void StartDefusal(int client, int target) {
-	if (g_iDefuse_Userid[client] != 0)return; // defusal already in progress
-	
-	PrintHintText(client, "Defusing.");
-	
-	g_iDefuse_Time[client] = 0;
-	g_iDefuse_Target[client] = target;
-	GetClientAbsOrigin(client, g_fDefuse_Position[client]);
-	GetClientEyeAngles(client, g_fDefuse_Angles[client]);
-	g_bDefuse_Cancelled[client] = false;
-	g_iDefuse_Userid[client] = GetClientUserId(client);
-	CreateTimer(1.0, DefuseTimer, client, TIMER_REPEAT);
-	
-	EmitSoundToClient(client, SOUND_DEFUSE);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) {
 	
 	if (!IsValidClient(client))return Plugin_Continue;
-	
-	if ((buttons & IN_USE) == 0) {
-		
-		if (g_iDefuse_Userid[client] && !g_bDefuse_Cancelled[client]) {  // is defuse in progress?
-			g_bDefuse_Cancelled[client] = true;
-			PrintHintText(client, "Defusal Cancelled.");
-		}
-	}
 	
 	if (!IsValidEntity(weapon))return Plugin_Continue;
 	
@@ -643,29 +530,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		Command_Mine(client, 0);
 	
 	return Plugin_Continue;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-public void MineUsed(const char[] output, int caller, int activator, float delay)
-{
-	// register last mine touched
-	g_iLast_Mine = caller;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-public void Event_PlayerUse(Handle event, const char[] name, bool dontBroadcast) {
-	
-	int id = GetEventInt(event, "userid");
-	int target = GetEventInt(event, "entity");
-	
-	if (g_iLast_Mine == target)
-	{
-		int client = GetClientOfUserId(id);
-		if (client == 0) // client has disconnected
-			return;
-		
-		StartDefusal(client, target);
-	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
