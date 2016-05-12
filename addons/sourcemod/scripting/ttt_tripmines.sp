@@ -1,17 +1,7 @@
-
-/* /////////////////////////////////
-// ______________  ___________ 
-// \______   \   \/  /  _____/ 
-//  |       _/\     /   \  ___ 
-//  |    |   \/     \    \_\  \
-//  |____|_  /___/\  \______  /
-//         \/      \_/      \/
-//     R E F L E X  -  G A M E R S
-*/
-
 #include <sourcemod>
 #include <sdktools>
 #include <ttt>
+#include <ttt_shop>
 #include <multicolors>
 
 #pragma semicolon 1
