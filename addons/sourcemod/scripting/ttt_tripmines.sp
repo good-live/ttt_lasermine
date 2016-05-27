@@ -77,6 +77,7 @@ ConVar sm_pp_minefilter; // detonation mode
 ConVar sm_pp_name; // name of the tripmines in the Traitor Shop
 ConVar sm_pp_price; // price of the tripmines in the Traitor Shop
 ConVar sm_pp_mode;
+ConVar sm_pp_prio;
 
 int g_iMines[MAXPLAYERS + 1]; // number of mines per player
 
@@ -102,6 +103,7 @@ public OnPluginStart() {
 	sm_pp_name = CreateConVar("tp_name", "Tripmine", "Name of the Tripmines in the shop."); // name of the tripmines in the Traitor Shop
 	sm_pp_price = CreateConVar("tp_price", "5000", "Price of the Tipmines in the shop set it to 0 to disable"); // price of the tripmines in the Traitor Shop
 	sm_pp_mode = CreateConVar("tp_mode", "1", "Mode of the Tripmines 0 = Everybody, 1 = T Only, 2 = D Only, 3 = T and D");
+	sm_pp_prio = CreateConVar("tp_prio", "100", "Priority for the tripmine (High prio = at the beginning of the menu");
 	
 	HookEvent("round_start", Event_RoundStart);
 	HookEvent("round_end", Event_RoundEnd);
@@ -136,16 +138,16 @@ public void OnAllPluginsLoaded()
 	
 	if (sm_pp_mode.IntValue == 0)
 	{
-		TTT_RegisterCustomItem("tripmine_i", sName, sm_pp_price.IntValue, TTT_TEAM_INNOCENT);
-		TTT_RegisterCustomItem("tripmine_t", sName, sm_pp_price.IntValue, TTT_TEAM_TRAITOR);
-		TTT_RegisterCustomItem("tripmine_d", sName, sm_pp_price.IntValue, TTT_TEAM_DETECTIVE);
+		TTT_RegisterCustomItem("tripmine_i", sName, sm_pp_price.IntValue, TTT_TEAM_INNOCENT, sm_pp_prio.IntValue);
+		TTT_RegisterCustomItem("tripmine_t", sName, sm_pp_price.IntValue, TTT_TEAM_TRAITOR, sm_pp_prio.IntValue);
+		TTT_RegisterCustomItem("tripmine_d", sName, sm_pp_price.IntValue, TTT_TEAM_DETECTIVE, sm_pp_prio.IntValue);
 	} else if (sm_pp_mode.IntValue == 1) {
-		TTT_RegisterCustomItem("tripmine_t", sName, sm_pp_price.IntValue, TTT_TEAM_TRAITOR);
+		TTT_RegisterCustomItem("tripmine_t", sName, sm_pp_price.IntValue, TTT_TEAM_TRAITOR, sm_pp_prio.IntValue);
 	} else if (sm_pp_mode.IntValue == 2) {
-		TTT_RegisterCustomItem("tripmine_d", sName, sm_pp_price.IntValue, TTT_TEAM_DETECTIVE);
+		TTT_RegisterCustomItem("tripmine_d", sName, sm_pp_price.IntValue, TTT_TEAM_DETECTIVE, sm_pp_prio.IntValue);
 	} else if (sm_pp_mode.IntValue == 3) {
-		TTT_RegisterCustomItem("tripmine_t", sName, sm_pp_price.IntValue, TTT_TEAM_TRAITOR);
-		TTT_RegisterCustomItem("tripmine_d", sName, sm_pp_price.IntValue, TTT_TEAM_DETECTIVE);
+		TTT_RegisterCustomItem("tripmine_t", sName, sm_pp_price.IntValue, TTT_TEAM_TRAITOR, sm_pp_prio.IntValue);
+		TTT_RegisterCustomItem("tripmine_d", sName, sm_pp_price.IntValue, TTT_TEAM_DETECTIVE, sm_pp_prio.IntValue);
 	}
 	
 }
